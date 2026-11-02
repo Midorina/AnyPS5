@@ -222,19 +222,38 @@ TFloat ScaledFloat(const char* text, char** end, std::int64_t pten, int* error, 
     }
     const bool overflowed = std::isinf(value) && guestErrno == RangeError;
     if (pten != 0 && stop != text && (std::isfinite(value) || overflowed)) {
-        if (Hexadecimal(text)) NotImplemented_nid_no_patch(function);
-        std::string number(text, static_cast<const char*>(stop));
-        long long exponent = 0;
-        const auto marker = number.find_first_of("eE");
-        if (marker != std::string::npos) {
-            exponent = std::strtoll(number.c_str() + marker + 1, nullptr, 10);
-            number.resize(marker);
+        if (Hexadecimal(text)) {
+            std::string number(text, static_cast<const char*>(stop));
+            const auto marker = number.find_first_of("pP");
+            if (marker != std::string::npos) {
+                long long hexExponent = 0;
+                const char* expStart = number.c_str() + marker + 1;
+                if (*expStart == '+' || *expStart == '-') ++expStart;
+                hexExponent = std::strtoll(expStart, nullptr, 10);
+                number.resize(marker);
+                hexExponent = std::clamp(hexExponent, -ExponentLimit, ExponentLimit) + std::clamp<std::int64_t>(pten, -ExponentLimit, ExponentLimit);
+                number += 'p';
+                number += std::to_string(hexExponent);
+            } else {
+                number += 'p';
+                number += std::to_string(std::clamp<std::int64_t>(pten, -ExponentLimit, ExponentLimit));
+            }
+            guestErrno = 0;
+            value = parse(number.c_str(), nullptr);
+        } else {
+            std::string number(text, static_cast<const char*>(stop));
+            long long exponent = 0;
+            const auto marker = number.find_first_of("eE");
+            if (marker != std::string::npos) {
+                exponent = std::strtoll(number.c_str() + marker + 1, nullptr, 10);
+                number.resize(marker);
+            }
+            exponent = std::clamp(exponent, -ExponentLimit, ExponentLimit) + std::clamp<std::int64_t>(pten, -ExponentLimit, ExponentLimit);
+            number += 'e';
+            number += std::to_string(exponent);
+            guestErrno = 0;
+            value = parse(number.c_str(), nullptr);
         }
-        exponent = std::clamp(exponent, -ExponentLimit, ExponentLimit) + std::clamp<std::int64_t>(pten, -ExponentLimit, ExponentLimit);
-        number += 'e';
-        number += std::to_string(exponent);
-        guestErrno = 0;
-        value = parse(number.c_str(), nullptr);
     }
     if (guestErrno == RangeError && (value == 0 || std::isinf(value))) {
         if (error != nullptr) *error = 1;

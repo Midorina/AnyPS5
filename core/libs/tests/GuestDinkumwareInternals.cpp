@@ -690,6 +690,64 @@ void TestLongLogAt53Bits() {
     }
 }
 
+void TestHexScaled() {
+    char* end = nullptr;
+    int error = 99;
+    *__error_nid_postfix() = 0;
+
+    /* Basic positive scale */
+    Require(_Stodx_nid_postfix("0x1.8p+1", &end, 2, &error) == 0x1.8p+3 && error == 0 && *__error_nid_postfix() == 0, "hex double scaled up");
+    error = 99;
+    *__error_nid_postfix() = 7;
+    Require(_Stodx_nid_postfix("0x1.8p+1", &end, 2, &error) == 0x1.8p+3 && error == 0 && *__error_nid_postfix() == 7, "hex double scaled up preserves errno");
+
+    /* Negative scale */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stodx_nid_postfix("0x1.8p+10", &end, -7, &error) == 0x1.8p+3 && error == 0 && *__error_nid_postfix() == 0, "hex double scaled down");
+
+    /* Scale that overflows */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(std::isinf(_Stodx_nid_postfix("0x1p+1020", &end, 10, &error)) && error == 1 && *__error_nid_postfix() == RangeError, "hex double overflow with scale");
+
+    /* Scale that rescues from overflow */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stodx_nid_postfix("0x1p+1024", &end, -100, &error) == 0x1p+924 && error == 0 && *__error_nid_postfix() == 0, "hex double overflow rescued by scale");
+
+    /* Float scale */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stofx_nid_postfix("0x1.8p+1", &end, 2, &error) == 0x1.8p+3f && error == 0 && *__error_nid_postfix() == 0, "hex float scaled up");
+
+    /* Float overflow rescued by scale */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stofx_nid_postfix("0x1p+130", &end, -10, &error) == 0x1p+120f && error == 0 && *__error_nid_postfix() == 0, "hex float overflow rescued by scale");
+
+    /* Hex without explicit exponent */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stodx_nid_postfix("0x1.5", &end, 3, &error) == 0x1.5p+3 && error == 0 && *__error_nid_postfix() == 0, "hex without exponent scaled");
+
+    /* Negative hex with scale */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stodx_nid_postfix("-0x1.8p+1", &end, 2, &error) == -0x1.8p+3 && error == 0 && *__error_nid_postfix() == 0, "negative hex scaled");
+
+    /* Hex with whitespace and scale */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stodx_nid_postfix("  0x1p+2", &end, 1, &error) == 0x1p+3 && error == 0 && *__error_nid_postfix() == 0, "hex with whitespace scaled");
+
+    /* Alias functions */
+    error = 99;
+    *__error_nid_postfix() = 0;
+    Require(_Stod_nid_postfix("0x1.8p+1", &end, 2) == 0x1.8p+3, "hex double alias scaled");
+    Require(_Stof_nid_postfix("0x1.8p+1", &end, 2) == 0x1.8p+3f, "hex float alias scaled");
+}
+
 }
 
 int main() {
@@ -702,6 +760,7 @@ int main() {
     TestFloatingRounds();
     TestFloatErrors();
     TestScaledNan();
+    TestHexScaled();
     TestIntegerErrors();
     TestArithmetic();
     TestDispatch();
