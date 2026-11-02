@@ -354,6 +354,7 @@ void TestIntegerErrors() {
     Require(_Stollx_nid_postfix("123", &end, 0, &error) == 123 && error == 0 && *__error_nid_postfix() == 5, "_Stollx in range");
     Require(_Stollx_nid_postfix("9223372036854775808", &end, 10, &error) == 9223372036854775807ll && error == RangeError && *__error_nid_postfix() == RangeError, "_Stollx overflow");
     *__error_nid_postfix() = 5;
+    Require(_Stolx_nid_postfix("456", &end, 10, &error) == 456 && error == 0 && *__error_nid_postfix() == 5, "_Stolx in range");
     const char* text = " 12";
     for (int base : {1, -1, 37}) {
         error = 99;
@@ -367,6 +368,10 @@ void TestIntegerErrors() {
     Require(_Stolx_nid_postfix("9223372036854775808", &end, 0, &error) == 9223372036854775807ll && error == RangeError && *__error_nid_postfix() == 0, "_Stolx overflow inside the unsigned range");
     Require(_Stolx_nid_postfix("-18446744073709551615", &end, 10, &error) == (-9223372036854775807ll - 1) && error == RangeError && *__error_nid_postfix() == 0, "_Stolx negative overflow inside the unsigned range");
     Require(_Stolx_nid_postfix("18446744073709551616", &end, 10, &error) == 9223372036854775807ll && error == RangeError && *__error_nid_postfix() == RangeError, "_Stolx overflow past the unsigned range");
+    error = 99;
+    *__error_nid_postfix() = 5;
+    Require(_Stoulx_nid_postfix("789", &end, 10, &error) == 789 && error == 0 && *__error_nid_postfix() == 5, "_Stoulx in range");
+    Require(_Stoullx_nid_postfix("9876543210", &end, 10, &error) == 9876543210ull && error == 0 && *__error_nid_postfix() == 5, "_Stoullx in range");
     error = 99;
     *__error_nid_postfix() = 0;
     Require(_Stoulx_nid_postfix("-1", &end, 0, &error) == 18446744073709551615ull && error == 0, "_Stoulx wraps a negative value");
