@@ -306,6 +306,17 @@ static void CheckMinMax() {
     const MinMaxPointers empty = __std_minmax_element_8_nid_postfix(wides, wides, false);
     Require(empty.minimum == wides && empty.maximum == wides);
 
+    const unsigned char mmBytes[] = {7, 2, 9, 2, 9, 1};
+    const MinMaxPointers mmUnsignedBytes = __std_minmax_element_1_nid_postfix(mmBytes, mmBytes + 6, false);
+    Require(mmUnsignedBytes.minimum == mmBytes + 5 && mmUnsignedBytes.maximum == mmBytes + 4);
+    const MinMaxPointers mmSignedBytes = __std_minmax_element_1_nid_postfix(mmBytes, mmBytes + 6, true);
+    Require(mmSignedBytes.minimum == mmBytes + 5 && mmSignedBytes.maximum == mmBytes + 4);
+    const std::uint32_t mmWords[] = {10, 3, 10, 3, 10};
+    const MinMaxPointers mmUnsignedWords = __std_minmax_element_4_nid_postfix(mmWords, mmWords + 5, false);
+    Require(mmUnsignedWords.minimum == mmWords + 1 && mmUnsignedWords.maximum == mmWords + 4);
+    const MinMaxPointers mmSignedWords = __std_minmax_element_4_nid_postfix(mmWords, mmWords + 5, true);
+    Require(mmSignedWords.minimum == mmWords + 1 && mmSignedWords.maximum == mmWords + 4);
+
     const std::int32_t edges[] = {INT32_MIN, INT32_MIN + 1, -0x10001, -0x10000, -1, 0, 1, 0xffff, 0x10000, INT32_MAX - 1, INT32_MAX};
     for (const auto& left : edges) {
         Require(__std_min_4i_nid_postfix(&left, &left + 1) == left);
@@ -386,11 +397,40 @@ static void CheckReverseAndSwap() {
     __std_reverse_trivially_swappable_2_nid_postfix(halves, halves + 5);
 
     Require(halves[0] == 5 && halves[1] == 4 && halves[2] == 3 && halves[3] == 2 && halves[4] == 1);
-    const std::uint64_t wides[] = {1, 2, 3};
+
+    unsigned char bytes[] = {10, 20, 30, 40, 50, 60};
+    __std_reverse_trivially_swappable_1_nid_postfix(bytes, bytes + 6);
+    Require(bytes[0] == 60 && bytes[1] == 50 && bytes[2] == 40 && bytes[3] == 30 && bytes[4] == 20 && bytes[5] == 10);
+
+    std::uint32_t words[] = {1, 2, 3, 4};
+    __std_reverse_trivially_swappable_4_nid_postfix(words, words + 4);
+    Require(words[0] == 4 && words[1] == 3 && words[2] == 2 && words[3] == 1);
+
+    std::uint64_t wides[] = {100, 200, 300};
+    __std_reverse_trivially_swappable_8_nid_postfix(wides, wides + 3);
+    Require(wides[0] == 300 && wides[1] == 200 && wides[2] == 100);
+
+    const std::uint64_t srcWides[] = {1, 2, 3};
     std::uint64_t reversed[4] = {9, 9, 9, 9};
-    __std_reverse_copy_trivially_copyable_8_nid_postfix(wides, wides + 3, reversed);
+    __std_reverse_copy_trivially_copyable_8_nid_postfix(srcWides, srcWides + 3, reversed);
 
     Require(reversed[0] == 3 && reversed[1] == 2 && reversed[2] == 1 && reversed[3] == 9);
+
+    const unsigned char srcBytes[] = {1, 2, 3, 4};
+    unsigned char revBytes[5] = {0, 0, 0, 0, 0};
+    __std_reverse_copy_trivially_copyable_1_nid_postfix(srcBytes, srcBytes + 4, revBytes);
+    Require(revBytes[0] == 4 && revBytes[1] == 3 && revBytes[2] == 2 && revBytes[3] == 1 && revBytes[4] == 0);
+
+    const std::uint16_t srcHalves[] = {10, 20, 30};
+    std::uint16_t revHalves[4] = {0, 0, 0, 0};
+    __std_reverse_copy_trivially_copyable_2_nid_postfix(srcHalves, srcHalves + 3, revHalves);
+    Require(revHalves[0] == 30 && revHalves[1] == 20 && revHalves[2] == 10 && revHalves[3] == 0);
+
+    const std::uint32_t srcWords[] = {5, 6, 7};
+    std::uint32_t revWords[4] = {0, 0, 0, 0};
+    __std_reverse_copy_trivially_copyable_4_nid_postfix(srcWords, srcWords + 3, revWords);
+    Require(revWords[0] == 7 && revWords[1] == 6 && revWords[2] == 5 && revWords[3] == 0);
+
     unsigned char left[37], right[37];
     for (int i = 0; i < 37; ++i) {
         left[i] = static_cast<unsigned char>(i);
